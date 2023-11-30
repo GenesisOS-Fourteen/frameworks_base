@@ -26,6 +26,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Process;
 import android.os.SystemProperties;
 import android.text.TextUtils;
@@ -33,8 +34,18 @@ import android.util.Log;
 
 import com.android.internal.R;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -84,6 +95,8 @@ public class PropImitationHooks {
     private static final String SPOOF_PIXEL_GPHOTOS = "persist.sys.pihooks.gphotos";
     private static final String SPOOF_PIXEL_PI = "persist.sys.pihooks.pi";
     private static final String SPOOF_VENDING_SDK32_ENABLED = "persist.sys.spoof.vending_sdk32";
+
+    private static final String DATA_FILE = "gms_certified_props.json";
 
     private static final ComponentName GMS_ADD_ACCOUNT_ACTIVITY =
             ComponentName.unflattenFromString(
@@ -176,7 +189,7 @@ public class PropImitationHooks {
                     "PIXEL_2024_EXPERIENCE",
                     "PIXEL_2024_MIDYEAR_EXPERIENCE");
 
-    private static volatile String[] sCertifiedProps;
+    private static volatile List<String> sCertifiedProps = new ArrayList<>();
     private static volatile String sStockFp, sNetflixModel;
 
     private static volatile String sProcessName;
@@ -197,7 +210,34 @@ public class PropImitationHooks {
             return;
         }
 
-        sCertifiedProps = res.getStringArray(R.array.config_certifiedBuildProperties);
+        // Load certified props from JSON file or fallback to local resources
+        File dataFile = new File(Environment.getDataSystemDirectory(), DATA_FILE);
+        String savedProps = readFromFile(dataFile);
+
+        if (TextUtils.isEmpty(savedProps)) {
+            dlog("Parsing props locally - data file unavailable");
+            sCertifiedProps =
+                    Arrays.asList(res.getStringArray(R.array.config_certifiedBuildProperties));
+        } else {
+            dlog("Parsing props fetched by attestation service");
+            try {
+                JSONObject parsedProps = new JSONObject(savedProps);
+                Iterator<String> keys = parsedProps.keys();
+                sCertifiedProps = new ArrayList<>();
+
+                while (keys.hasNext()) {
+                    String key = keys.next();
+                    String value = parsedProps.getString(key);
+                    sCertifiedProps.add(key + ":" + value);
+                }
+            } catch (JSONException e) {
+                Log.e(TAG, "Error parsing JSON data", e);
+                dlog("Parsing props locally as fallback");
+                sCertifiedProps =
+                        Arrays.asList(res.getStringArray(R.array.config_certifiedBuildProperties));
+            }
+        }
+
         sStockFp = res.getString(R.string.config_stockFingerprint);
         sNetflixModel = res.getString(R.string.config_netflixSpoofModel);
 
@@ -282,6 +322,23 @@ public class PropImitationHooks {
         }
     }
 
+    private static String readFromFile(File file) {
+        StringBuilder content = new StringBuilder();
+
+        if (file.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+
+                while ((line = reader.readLine()) != null) {
+                    content.append(line);
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "Error reading from file", e);
+            }
+        }
+        return content.toString();
+    }
+
     private static void spoofAttestationToLegacy() {
         if (!SystemProperties.getBoolean(SPOOF_VENDING_SDK32_ENABLED, false)) return;
         if (sIsGms || sIsFinsky) {
@@ -321,7 +378,7 @@ public class PropImitationHooks {
             return;
         }
 
-        if (sCertifiedProps.length == 0) {
+        if (sCertifiedProps.isEmpty()) {
             dlog("Certified props are not set");
             return;
         }
@@ -339,7 +396,7 @@ public class PropImitationHooks {
                                             + " was:"
                                             + was
                                             + ", killing myself!"); // process will restart
-                                                                    // automatically later
+                            // automatically later
                             Process.killProcess(Process.myPid());
                         }
                     }
