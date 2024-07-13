@@ -6311,6 +6311,12 @@ public final class Settings {
         public static final String NOTIFICATION_SOUND_VIB_SCREEN_ON = "notification_sound_vib_screen_on";
 
         /**
+         * Whether to show daily data usage in the QS footer.
+         * @hide
+         */
+        public static final String QS_SHOW_DATA_USAGE = "qs_show_data_usage";
+
+        /**
          * Keys we no longer back up under the current schema, but want to continue to
          * process when restoring historical backup datasets.
          *
@@ -12551,12 +12557,6 @@ public final class Settings {
          */
         @Readable
         public static final String STYLUS_POINTER_ICON_ENABLED = "stylus_pointer_icon_enabled";
-
-        /**
-         * Whether to show daily data usage in the QS footer.
-         * @hide
-         */
-        public static final String QS_SHOW_DATA_USAGE = "qs_show_data_usage";
 
         /**
          * These entries are considered common between the personal and the managed profile,
