@@ -83,6 +83,7 @@ public class PropImitationHooks {
     private static final String PROP_FIRST_API_LEVEL = "persist.sys.pihooks.first_api_level";
 
     private static final String SPOOF_PIXEL_GPHOTOS = "persist.sys.pihooks.gphotos";
+    private static final String SPOOF_PIXEL_PI = "persist.sys.pihooks.pi";
 
     private static final ComponentName GMS_ADD_ACCOUNT_ACTIVITY = ComponentName.unflattenFromString(
             "com.google.android.gms/.auth.uiflows.minutemaid.MinuteMaidActivity");
@@ -393,6 +394,9 @@ public class PropImitationHooks {
             dlog("Key attestation blocking is disabled by user");
             return;
         }
+
+        if (!SystemProperties.getBoolean(SPOOF_PIXEL_PI, true))
+            return;
 
         // Check stack for SafetyNet or Play Integrity
         if (isCallerSafetyNet() || sIsFinsky) {
