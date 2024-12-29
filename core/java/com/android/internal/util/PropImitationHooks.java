@@ -102,7 +102,7 @@ public class PropImitationHooks {
     private static volatile String sStockFp, sNetflixModel;
 
     private static volatile String sProcessName;
-    private static volatile boolean sIsGms, sIsFinsky, sIsPhotos, sIsTablet;
+    private static volatile boolean sIsGms, sIsFinsky, sIsPhotos;
 
     public static void setProps(Context context) {
         final String packageName = context.getPackageName();
@@ -122,7 +122,6 @@ public class PropImitationHooks {
         sCertifiedProps = res.getStringArray(R.array.config_certifiedBuildProperties);
         sStockFp = res.getString(R.string.config_stockFingerprint);
         sNetflixModel = res.getString(R.string.config_netflixSpoofModel);
-        sIsTablet = res.getBoolean(R.bool.config_spoofasTablet);
 
         sProcessName = processName;
         sIsGms = packageName.equals(PACKAGE_GMS) && processName.equals(PROCESS_GMS_UNSTABLE);
@@ -142,7 +141,7 @@ public class PropImitationHooks {
             setPropValue("FINGERPRINT", sStockFp);
         } else if (packageName.equals(PACKAGE_GBOARD) || packageName.equals(PACKAGE_SUBSCRIPTION_RED) || packageName.equals(PACKAGE_TURBO)
                    || packageName.equals(PACKAGE_VELVET) || packageName.equals(PACKAGE_SETUPWIZARD) || packageName.equals(PACKAGE_GMS)) {
-            if (sIsTablet) {
+            if (SystemProperties.get("ro.build.characteristics").equals("tablet")) {
                 dlog("Spoofing Pixel Tablet for: " + packageName + " process: " + processName);
                 sPixelTabletProps.forEach(PropImitationHooks::setPropValue);
             } else {
