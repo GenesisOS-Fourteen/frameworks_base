@@ -82,6 +82,8 @@ public class PropImitationHooks {
     private static final String PROP_SECURITY_PATCH = "persist.sys.pihooks.security_patch";
     private static final String PROP_FIRST_API_LEVEL = "persist.sys.pihooks.first_api_level";
 
+    private static final String SPOOF_PIXEL_GPHOTOS = "persist.sys.pihooks.gphotos";
+
     private static final ComponentName GMS_ADD_ACCOUNT_ACTIVITY = ComponentName.unflattenFromString(
             "com.google.android.gms/.auth.uiflows.minutemaid.MinuteMaidActivity");
 
@@ -195,7 +197,7 @@ public class PropImitationHooks {
         sProcessName = processName;
         sIsGms = packageName.equals(PACKAGE_GMS) && processName.equals(PROCESS_GMS_UNSTABLE);
         sIsFinsky = packageName.equals(PACKAGE_FINSKY);
-        sIsPhotos = packageName.equals(PACKAGE_GPHOTOS);
+        sIsPhotos = packageName.equals(PACKAGE_GPHOTOS) && SystemProperties.getBoolean(SPOOF_PIXEL_GPHOTOS, true);
 
         /* Set Certified Properties for GMSCore
          * Set Pixel 5a to a few GMS processes
