@@ -84,6 +84,7 @@ public class PropImitationHooks {
 
     private static final String SPOOF_PIXEL_GPHOTOS = "persist.sys.pihooks.gphotos";
     private static final String SPOOF_PIXEL_PI = "persist.sys.pihooks.pi";
+    private static final String SPOOF_VENDING_SDK32_ENABLED = "persist.sys.spoof.vending_sdk32";
 
     private static final ComponentName GMS_ADD_ACCOUNT_ACTIVITY = ComponentName.unflattenFromString(
             "com.google.android.gms/.auth.uiflows.minutemaid.MinuteMaidActivity");
@@ -212,6 +213,7 @@ public class PropImitationHooks {
             case PROCESS_GMS_UNSTABLE:
                 dlog("Setting certified props for: " + packageName + " process: " + processName);
                 setCertifiedPropsForGms();
+                spoofAttestationToLegacy();
                 return;
             case PROCESS_GMS_PERSISTENT:
             case PROCESS_GMS_GAPPS:
@@ -221,6 +223,7 @@ public class PropImitationHooks {
             case PROCESS_GMS_UPDATE:
                 dlog("Spoofing Pixel 5a for: " + packageName + " process: " + processName);
                 setProps(sPixel5Props);
+                spoofAttestationToLegacy();
                 return;
         }
 
@@ -266,6 +269,18 @@ public class PropImitationHooks {
                     setPropValue("MODEL", sNetflixModel);
                 }
                 return;
+            case PACKAGE_FINSKY:
+                spoofAttestationToLegacy();
+                return;
+        }
+    }
+
+    private static void spoofAttestationToLegacy() {
+        if (!SystemProperties.getBoolean(SPOOF_VENDING_SDK32_ENABLED, false))
+            return;
+        if (sIsGms || sIsFinsky) {
+            setPropValue("VERSION.RELEASE", "12");
+            setPropValue("VERSION.SDK_INT", "32");
         }
     }
 
